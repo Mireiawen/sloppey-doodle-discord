@@ -1,0 +1,5 @@
+templates_c
+vendor
+config.json
+.idea
+*.swp

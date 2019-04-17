@@ -1,0 +1,23 @@
+{
+    "name": "mireiawen/sloppey-calendar-hook",
+    "description": "Webhook for ICS calendar and Sloppey Discord",
+    "type": "project",
+    "require": {
+        "johngrogg/ics-parser": "^2.1",
+      "ext-gettext": "*",
+        "smarty/smarty": "^3.1",
+        "agorlov/discordmsg": "^1.0"
+    },
+    "license": "GPLv3",
+    "authors": [
+        {
+            "name": "Mireiawen Rose",
+            "email": "mir@mireiawen.net"
+        }
+    ],
+    "autoload": {
+      "psr-4": {
+        "Reader\\": "includes"
+      }
+    }
+}

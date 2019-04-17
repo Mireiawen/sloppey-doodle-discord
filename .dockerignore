@@ -1,0 +1,7 @@
+templates_c
+vendor
+config.json
+.git
+.idea
+Dockerfile
+run.sh
