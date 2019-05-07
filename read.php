@@ -3,6 +3,7 @@ declare(strict_types = 1);
 
 require_once('vendor/autoload.php');
 
-use Reader\Application;
+use Mireiawen\Reader\Application;
 
+// Execute the main application
 Application::Run();

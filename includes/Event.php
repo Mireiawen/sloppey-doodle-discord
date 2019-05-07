@@ -2,21 +2,46 @@
 /** @noinspection SpellCheckingInspection */
 declare(strict_types = 1);
 
-namespace Reader;
+namespace Mireiawen\Reader;
 
+/**
+ * Event helper class
+ *
+ * @package Mireiawen\Reader
+ */
 class Event
 {
 	/**
+	 * Text for the voted Doodle items
+	 *
+	 * @var string
+	 */
+	public const STATUS_TEXT_EVENT = 'Doodle';
+	
+	/**
+	 * Text for the Doodle item in voting
+	 *
+	 * @var string
+	 */
+	public const STATUS_TEXT_VOTING = 'Doodle-kesken';
+	
+	/**
+	 * Status for items in voting
+	 *
 	 * @var string
 	 */
 	public const STATUS_IN_VOTING = 'In voting';
 	
 	/**
+	 * Status for actual raids
+	 *
 	 * @var string
 	 */
 	public const STATUS_RAID = 'Raid';
 	
 	/**
+	 * Actual event data
+	 *
 	 * @var array
 	 */
 	protected $data;
@@ -41,13 +66,14 @@ class Event
 			throw new \Exception(\sprintf(\_('Got invalid data from the Doodle Calendar')));
 		}
 		
+		// Change the status text that can be translated into custom non-translated text
 		switch ($matches['status'])
 		{
-		case 'Doodle':
+		case self::STATUS_TEXT_EVENT:
 			$status = self::STATUS_RAID;
 			break;
 		
-		case 'Doodle-kesken':
+		case self::STATUS_TEXT_VOTING:
 			$status = self::STATUS_IN_VOTING;
 			break;
 		
@@ -56,14 +82,21 @@ class Event
 		}
 		
 		// Cut the description, participants and URL from Doodle message
+		// @note: This does require paid Doodle account for it to work and it is translated by the Doodle
 		if (\preg_match("/^Aloitteesta\s+.+?\n(?P<description>.*)\sOsallistujat:\s(?P<participants>.*)(?P<url>https:\/\/.+?)$/ms", $event->description, $descriptions) === FALSE)
 		{
 			throw new \Exception(\sprintf(\_('Unable to parse the Doodle Calendar message')));
 		}
 		
+		if (empty($descriptions))
+		{
+			throw new \Exception(\sprintf(\_('Invalid message format, possibly free Doodle account')));
+		}
+		
 		$description = \trim($descriptions['description']);
 		$url = \trim($descriptions['url']);
 		
+		// Trim the participants out of the text blob
 		$participants = [];
 		foreach (\explode("\n", $descriptions['participants']) as $participant)
 		{
@@ -86,6 +119,7 @@ class Event
 		}
 		sort($participants);
 		
+		// Generate the start and end dates in UTC
 		$tz = new \DateTimeZone('UTC');
 		$start = new \DateTime($event->dtstart, $tz);
 		$end = new \DateTime($event->dtend, $tz);
@@ -100,75 +134,119 @@ class Event
 			'Description' => $description,
 			'Attendees' => $participants,
 			'URL' => $url,
+			'UID' => $event->uid,
+			'DateStart' => $event->dtstart,
 		];
 	}
 	
 	/**
-	 * Magic method to have GetX methods to work with less work than writing each one manually
+	 * Get the event summary text
 	 *
-	 * @param string $name
-	 * @param array $params
-	 *
-	 * @return mixed
-	 * @throws \Exception
+	 * @return string
 	 */
-	public function __call(string $name, array $params)
+	public function GetSummary() : string
 	{
-		if (\preg_match('/^Get(?P<name>.*)$/', $name, $matches) === FALSE)
-		{
-			throw new \Exception(\sprintf(\_('Invalid call to %s'), $name));
-		}
-		
-		if (!isset($matches['name']))
-		{
-			throw new \Exception(\sprintf(\_('Invalid call to %s'), $name));
-		}
-		
-		if (!empty($params))
-		{
-			throw new \Exception(\sprintf(\_('Invalid amount of parameters for %s'), $name));
-		}
-		
-		return $this->__get($matches['name']);
+		return $this->data['Summary'];
 	}
 	
 	/**
-	 * Magic method to get values from data array
+	 * Get the event status text
 	 *
-	 * @param string $key
-	 *
-	 * @return mixed
-	 * @throws \Exception
+	 * @return string
 	 */
-	public function __get(string $key)
+	public function GetStatus() : string
 	{
-		if (!$this->__isset($key))
-		{
-			throw new \Exception(\sprintf(\_('The key %s is not available'), $key));
-		}
-		
-		return $this->data[$key];
+		return $this->data['Status'];
 	}
 	
 	/**
-	 * Magic method to check if value exists
+	 * Get the event start time
 	 *
-	 * @param $name
-	 *
-	 * @return bool
+	 * @return \DateTime
 	 */
-	public function __isset(string $name) : bool
+	public function GetStart() : \DateTime
 	{
-		return \array_key_exists($name, $this->data);
+		return $this->data['Start'];
 	}
 	
 	/**
+	 * Get the event start time
+	 *
+	 * @return \DateTime
+	 */
+	public function GetEnd() : \DateTime
+	{
+		return $this->data['End'];
+	}
+	
+	/**
+	 * Get the event duration
+	 *
+	 * @return \DateInterval
+	 */
+	public function GetDuration() : \DateInterval
+	{
+		return $this->data['Duration'];
+	}
+	
+	/**
+	 * Get the event description
+	 *
+	 * @return string
+	 */
+	public function GetDescription() : string
+	{
+		return $this->data['Description'];
+	}
+	
+	/**
+	 * Get the event attendees
+	 *
+	 * @return array
+	 */
+	public function GetAttendees() : array
+	{
+		return $this->data['Attendees'];
+	}
+	
+	/**
+	 * Get the URL for the event
+	 *
+	 * @return string
+	 */
+	public function GetURL() : string
+	{
+		return $this->data['URL'];
+	}
+	
+	/**
+	 * Get the event UID
+	 *
+	 * @return string
+	 */
+	public function GetUID() : string
+	{
+		return $this->data['UID'];
+	}
+	
+	/**
+	 * Get the event date start
+	 *
+	 * @return string
+	 */
+	public function GetDateStart() : string
+	{
+		return $this->data['DateStart'];
+	}
+	
+	/**
+	 * Combine 2 events into one
+	 *
 	 * @param Event $event
 	 */
-	public function Merge(Event $event): void
+	public function Merge(Event $event) : void
 	{
 		$this->data['End'] = $event->GetEnd();
 		$this->data['Duration'] = $this->GetEnd()->diff($this->GetStart());
 	}
-	
 }

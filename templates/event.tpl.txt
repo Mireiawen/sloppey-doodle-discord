@@ -1,8 +1,8 @@
-<@&564391054921695232>: Reminder {$title} begins {$time} and lasts {$duration}
+<@&564391054921695232>: {$title} begins {$time} and lasts {$duration}
 {$message}
 
 {count($participants)} participants:
-{foreach $participants as $participant}* {$participant}
+{foreach $participants as $participant} * {$participant}
 {/foreach}
 
 See the results at {$url}
